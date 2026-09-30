@@ -1,0 +1,104 @@
+======================================================
+DAX MEASURES FOR JOB MARKET SKILL DEMAND TRACKER
+======================================================
+
+-----------------------
+1. JOB METRICS
+-----------------------
+
+Total Jobs = 
+DISTINCTCOUNT(FactJobs[Job_ID])
+// Usage: Use in KPI Cards to show total unique job postings.
+
+Total Companies = 
+DISTINCTCOUNT(FactJobs[Company])
+// Usage: Use in KPI Cards to show total hiring companies.
+
+Total Skills = 
+DISTINCTCOUNT(FactJobs[Skill])
+// Usage: Use in KPI Cards to show total unique skills across all jobs.
+
+Average Salary = 
+AVERAGE(FactJobs[Average_Salary])
+// Usage: Use in KPI Cards, Bar Charts, or Matrix to show the mean salary.
+
+Maximum Salary = 
+MAX(FactJobs[Salary_Max])
+// Usage: Use in tooltips or tables to indicate the salary ceiling.
+
+Minimum Salary = 
+MIN(FactJobs[Salary_Min])
+// Usage: Use in tooltips or tables to indicate the lowest base salary.
+
+Total Applications = 
+SUM(FactJobs[Application_Count])
+// Usage: Use in KPI cards or charts to show total candidate interest.
+
+-----------------------
+2. SKILL METRICS
+-----------------------
+
+Skill Demand = 
+COUNT(FactJobs[Skill])
+// Usage: Use in Bar Charts and Tooltips to show how many times a skill appears.
+
+Skill Demand % = 
+DIVIDE([Skill Demand], [Total Jobs])
+// Usage: Show the percentage of jobs requiring a specific skill.
+
+Number of Jobs Requiring Skill = 
+DISTINCTCOUNT(FactJobs[Job_ID])
+// Usage: Gives the exact count of unique jobs for a filtered skill.
+
+Top Skill = 
+MAXX(
+    TOPN(1, VALUES(DimSkill[Skill]), [Skill Demand], DESC),
+    DimSkill[Skill]
+)
+// Usage: Use in KPI card to dynamically display the #1 required skill based on current filters.
+
+-----------------------
+3. SALARY METRICS
+-----------------------
+
+Average Salary by Skill = 
+CALCULATE(
+    AVERAGE(FactJobs[Average_Salary]),
+    CROSSFILTER(FactJobs[Skill], DimSkill[Skill], Both)
+)
+// Usage: Use in tables/matrix to evaluate which skill commands the highest pay.
+
+Average Salary by Job Role = 
+CALCULATE(
+    AVERAGE(FactJobs[Average_Salary]),
+    ALLEXCEPT(DimJob, DimJob[Job_Title])
+)
+// Usage: Use in charts to compare compensation across different roles.
+
+Average Salary by Location = 
+CALCULATE(
+    AVERAGE(FactJobs[Average_Salary]),
+    ALLEXCEPT(DimLocation, DimLocation[Location])
+)
+// Usage: Compare geographical compensation trends.
+
+-----------------------
+4. TREND METRICS
+-----------------------
+
+ 
+// Usage: Put on a Line Chart against DimDate[Date] to show hiring momentum.
+
+Monthly Job Growth % = 
+VAR CurrentMonth = CALCULATE([Total Jobs])
+VAR PreviousMonth = CALCULATE([Total Jobs], DATEADD(DimDate[Date], -1, MONTH))
+RETURN 
+    DIVIDE(CurrentMonth - PreviousMonth, PreviousMonth, 0)
+// Usage: Format as percentage in a KPI card to show MoM hiring trends.
+
+Skill Demand Growth % = 
+VAR CurrentDemand = CALCULATE([Skill Demand])
+VAR PreviousDemand = CALCULATE([Skill Demand], DATEADD(DimDate[Date], -1, MONTH))
+RETURN 
+    DIVIDE(CurrentDemand - PreviousDemand, PreviousDemand, 0)
+// Usage: Use in Tooltips over time to see if a skill is growing or shrinking in demand.
